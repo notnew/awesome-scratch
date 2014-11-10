@@ -16,9 +16,10 @@ function scratch.raise(cmd, rule)
     local start   = util.cycle(#clients, findex + 1)
 
     for c in awful.client.iterate(matcher, start) do
-        c.sticky = true
+        local current_tag = awful.tag.selected(c.screen)
+        awful.client.toggletag(current_tag, c)
+
         c:raise()
-        -- end
         client.focus = c
         return
     end
@@ -29,19 +30,14 @@ end
 
 function scratch.toggle(cmd, rule, alwaysclose)
     local rule = rule or defaultRule
+
     if client.focus and awful.rules.match(client.focus, rule) then
-       local scratchWin = client.focus
-       awful.client.focus.history.previous()
-       scratchWin.sticky = false
-    elseif client.focus and awful.rules.match(client.focus, defaultRule) then
-        if alwaysclose then
-            local scratchWin = client.focus
-            awful.client.focus.history.previous()
-            scratchWin.sticky = false
-        else
-            client.focus.sticky = false
-            scratch.raise(cmd, rule)
+        local current_tag = awful.tag.selected(client.focus.screen)
+        local ctags = {}
+        for k,tag in pairs(client.focus:tags()) do
+            if tag ~= current_tag then table.insert(ctags, tag) end
         end
+        client.focus:tags(ctags)
     else
         scratch.raise(cmd, rule)
     end
