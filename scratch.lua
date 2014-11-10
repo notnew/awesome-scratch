@@ -5,6 +5,29 @@ local util = require("awful.util")
 local scratch = {}
 local defaultRule = {instance = "scratch"}
 
+-- Turn on this scratch window client (add current tag to window's tags,
+-- then set focus to the window)
+local function turn_on(c)
+    local current_tag = awful.tag.selected(c.screen)
+    ctags = {current_tag}
+    for k,tag in pairs(c:tags()) do
+        if tag ~= current_tag then table.insert(ctags, tag) end
+    end
+    c:tags(ctags)
+    c:raise()
+    client.focus = c
+end
+
+-- Turn off this scratch window client (remove current tag from window's tags)
+local function turn_off(c)
+    local current_tag = awful.tag.selected(c.screen)
+    local ctags = {}
+    for k,tag in pairs(c:tags()) do
+        if tag ~= current_tag then table.insert(ctags, tag) end
+    end
+    c:tags(ctags)
+end
+
 function scratch.raise(cmd, rule)
     local rule = rule or defaultRule
     local function matcher(c) return awful.rules.match(c, rule) end
@@ -16,15 +39,7 @@ function scratch.raise(cmd, rule)
     local start   = util.cycle(#clients, findex + 1)
 
     for c in awful.client.iterate(matcher, start) do
-        local current_tag = awful.tag.selected(c.screen)
-        ctags = {current_tag}
-        for k,tag in pairs(c:tags()) do
-            if tag ~= current_tag then table.insert(ctags, tag) end
-        end
-        c:tags(ctags)
-
-        c:raise()
-        client.focus = c
+        turn_on(c)
         return
     end
 
@@ -36,12 +51,7 @@ function scratch.toggle(cmd, rule, alwaysclose)
     local rule = rule or defaultRule
 
     if client.focus and awful.rules.match(client.focus, rule) then
-        local current_tag = awful.tag.selected(client.focus.screen)
-        local ctags = {}
-        for k,tag in pairs(client.focus:tags()) do
-            if tag ~= current_tag then table.insert(ctags, tag) end
-        end
-        client.focus:tags(ctags)
+        turn_off(client.focus)
     else
         scratch.raise(cmd, rule)
     end
