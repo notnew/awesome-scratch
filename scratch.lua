@@ -17,7 +17,11 @@ function scratch.raise(cmd, rule)
 
     for c in awful.client.iterate(matcher, start) do
         local current_tag = awful.tag.selected(c.screen)
-        awful.client.toggletag(current_tag, c)
+        ctags = {current_tag}
+        for k,tag in pairs(c:tags()) do
+            if tag ~= current_tag then table.insert(ctags, tag) end
+        end
+        c:tags(ctags)
 
         c:raise()
         client.focus = c
